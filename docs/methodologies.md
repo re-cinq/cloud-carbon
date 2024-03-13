@@ -173,12 +173,22 @@ Here is the YAML of PkgWatt data for the t3.micro instance.
 ```
 Utilizing these 4 data points, we calculate the CPU energy consumption at 27% utilization to be **0.005324117 kilowatts**.
 
+We need to convert this value to be in hours before we can multiply it by the vCPUHours, so that our units align. This is done
+by getting the interval value in seconds, and dividing the usage in kilowatts by that to get the usage in kilowatt seconds. Then
+multiply by 3600 to convert seconds to hours.
+```
+CPUKwH = Usage / interval(seconds) * 3600
+       = 0.005324117 / 30 * 3600
+       = 0.63889404 kWh
+
+```
+
 Now that we have the CPU usage of the entire server, we need to multiply it by the vCPU hours to get the CPU energy consumption of the VM.
 
 ```
 CPUEnergy = Usage * vCPUHours
-          = 0.005324117 * 0.166666666
-          = 0.000887353 kWh
+          = 0.63889404 * 0.166666666
+          = 0.10648234 kWh
 ```
  
 <br>
@@ -216,13 +226,13 @@ Now, we can put it all together and get the CPU Carbon Emission Equivalents for 
 
 ```
 CPUCO2e = CPUEnergy * PUE * gridFactor
-        = 0.000887353 * 1.2 * 7
-        = 0.007453764 gCO2eq/kWh
+        = 0.10648234 * 1.2 * 7
+        = 0.894451652 gCO2eq/kWh
 
 or, elongated is:
 CPUCO2e = usage * vCPUHours * PUE * gridFactor
-        = 0.005324117 * 0.166666666 * 1.2 * 7
-        = 0.007453764 gCO2eq/kWh
+        = 0.63889404 * 0.166666666 * 1.2 * 7
+        = 0.894451652 gCO2eq/kWh
 ```
 
 Therefore, we estimated the t3.micro VM CPU carbon emissions to be **0.007453764 gCO2eq/kWh** over 5 minutes.

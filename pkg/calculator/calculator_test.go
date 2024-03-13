@@ -57,9 +57,33 @@ func TestCalculateCPU(t *testing.T) {
 				name:     "default t3.micro at 27% usage over 5m",
 				interval: 5 * time.Minute,
 				params:   params(),
-				expRes:   0.007453764094512195,
+				expRes:   2.2361292283536582,
 			}
 		}(),
+
+		func() *testcase {
+			// Calculate the default values over
+			// a 30 second interval, instead of
+			// 5 minutes
+			return &testcase{
+				name:     "default 30 second interval",
+				interval: 30 * time.Second,
+				params:   params(),
+				expRes:   0.022361292283536588,
+			}
+		}(),
+
+		func() *testcase {
+			// Calculate the default values over
+			// one hour
+			return &testcase{
+				name:     "1 hour interval",
+				interval: 1 * time.Hour,
+				params:   params(),
+				expRes:   322.0026088829268,
+			}
+		}(),
+
 		func() *testcase {
 			// vCPUs not set in params, but set in metric
 			p := params()
@@ -69,7 +93,7 @@ func TestCalculateCPU(t *testing.T) {
 				name:     "vCPU set in metric, not params",
 				interval: 5 * time.Minute,
 				params:   p,
-				expRes:   0.007453764094512195,
+				expRes:   2.2361292283536582,
 			}
 		}(),
 		func() *testcase {
@@ -85,30 +109,6 @@ func TestCalculateCPU(t *testing.T) {
 				expRes:   0.00,
 			}
 		}(),
-
-		func() *testcase {
-			// Calculate the default values over
-			// a 30 second interval, instead of
-			// 5 minutes
-			return &testcase{
-				name:     "default 30 second interval",
-				interval: 30 * time.Second,
-				params:   params(),
-				expRes:   0.0007453764094512195,
-			}
-		}(),
-
-		func() *testcase {
-			// Calculate the default values over
-			// one hour
-			return &testcase{
-				name:     "1 hour interval",
-				interval: 1 * time.Hour,
-				params:   params(),
-				expRes:   0.08944516913414635,
-			}
-		}(),
-
 		func() *testcase {
 			// calculate with 4 vCPUs
 			p := params()
@@ -117,7 +117,7 @@ func TestCalculateCPU(t *testing.T) {
 				name:     "4 vCPU",
 				interval: 5 * time.Minute,
 				params:   p,
-				expRes:   0.01490752818902439,
+				expRes:   4.4722584567073165,
 			}
 		}(),
 
@@ -129,7 +129,7 @@ func TestCalculateCPU(t *testing.T) {
 				name:     "PUE is exactly 1.0",
 				interval: 5 * time.Minute,
 				params:   p,
-				expRes:   0.006211470078760163,
+				expRes:   1.8634410236280485,
 			}
 		}(),
 
@@ -143,7 +143,7 @@ func TestCalculateCPU(t *testing.T) {
 				name:     "High grid CO2e",
 				interval: 5 * time.Minute,
 				params:   p,
-				expRes:   0.42805902371341464,
+				expRes:   128.41770711402438,
 			}
 		}(),
 
@@ -157,7 +157,7 @@ func TestCalculateCPU(t *testing.T) {
 				name:     "large server and large workload",
 				interval: 5 * time.Minute,
 				params:   p,
-				expRes:   0.013218390243902438,
+				expRes:   3.9655170731707323,
 			}
 		}(),
 	} {
@@ -171,6 +171,35 @@ func TestCalculateCPU(t *testing.T) {
 			}
 		})
 	}
+}
+
+// Emission calculations should be over an interval of time,
+// thus the same configurations over different intervals should
+// have different values.
+func TestIntervalTimes(t *testing.T) {
+	t.Run("CPU emissions differ between 30s and 5 min", func(t *testing.T) {
+		p := params()
+
+		secs, err := cpu(30*time.Second, p)
+		assert.Nil(t, err)
+
+		mins, err := cpu(5*time.Minute, p)
+		assert.Nil(t, err)
+
+		assert.NotEqual(t, secs, mins)
+	})
+
+	t.Run("CPU emissions same between 60s and 1min", func(t *testing.T) {
+		p := params()
+
+		secs, err := cpu(60*time.Second, p)
+		assert.Nil(t, err)
+
+		mins, err := cpu(1*time.Minute, p)
+		assert.Nil(t, err)
+
+		assert.Equal(t, secs, mins)
+	})
 }
 
 func TestCubicSplineInterpolation(t *testing.T) {
