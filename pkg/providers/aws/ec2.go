@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
-	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
@@ -70,15 +69,17 @@ func (e *ec2Client) Refresh(ctx context.Context, ca *cache.Cache, region string)
 
 			id := aws.ToString(instance.InstanceId)
 			ca.Set(util.CacheKey(region, ec2Service, id),
-				&v1.Resource{
-					ID:          id,
-					Name:        getInstanceTag(instance.Tags, "Name"),
-					Service:     ec2Service,
-					Region:      region,
-					Kind:        string(instance.InstanceType),
-					Lifecycle:   string(instance.InstanceLifecycle),
-					VCPUCount:   int(aws.ToInt32(instance.CpuOptions.CoreCount) * aws.ToInt32(instance.CpuOptions.ThreadsPerCore)),
-					LastUpdated: time.Now().UTC(),
+				&v1.Instance{
+					Name:     id,
+					Provider: provider,
+					Service:  ec2Service,
+					Region:   region,
+					Kind:     string(instance.InstanceType),
+					Labels: v1.Labels{
+						"Name":      getInstanceTag(instance.Tags, "Name"),
+						"Lifecycle": string(instance.InstanceLifecycle),
+						"VCPUCount": string(aws.ToInt32(instance.CpuOptions.CoreCount) * aws.ToInt32(instance.CpuOptions.ThreadsPerCore)),
+					},
 				},
 				cache.DefaultExpiration,
 			)

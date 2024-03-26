@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"strconv"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -75,7 +76,7 @@ func (e *cloudWatchClient) GetEC2Metrics(ca *cache.Cache, region string, interva
 			continue
 		}
 
-		meta := cachedInstance.(*v1.Resource)
+		meta := cachedInstance.(*v1.Instance)
 
 		// update local instance metadata map
 		s, exists := local[instanceID]
@@ -90,7 +91,17 @@ func (e *cloudWatchClient) GetEC2Metrics(ca *cache.Cache, region string, interva
 			}
 		}
 		s.Labels.Add("Name", meta.Name)
-		metric.UnitAmount = float64(meta.VCPUCount)
+
+		// ParseFloat returns 0 on failure, since that's the default
+		// value of an unassigned int, store it regardless of the
+		// error. This value for vCPUs is a fallback to that provided
+		// by the dataset.
+		if vCPUs, exists := meta.Labels["VCPUCount"]; exists {
+			metric.UnitAmount, err = strconv.ParseFloat(vCPUs, 64)
+			if err != nil {
+				slog.Error("failed to parse GCP total VCPUs", "error", err)
+			}
+		}
 		s.Metrics.Upsert(&metric)
 
 		local[instanceID] = s

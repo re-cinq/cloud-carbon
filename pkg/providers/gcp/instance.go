@@ -155,14 +155,15 @@ func (c *Client) instanceCPUMetrics(
 		// translate fraction to a percentage
 		m.Usage = resp.GetPointData()[0].GetValues()[0].GetDoubleValue() * 100
 
-		f, err := strconv.ParseFloat(totalVCPUs, 64)
-		// TODO: we should not fail here but collect errors
+		// ParseFloat returns 0 on failure, since that's the default
+		// value of an unassigned int, store it regardless of the
+		// error. This value for vCPUs is a fallback to that provided
+		// by the dataset.
+		m.UnitAmount, err = strconv.ParseFloat(totalVCPUs, 64)
 		if err != nil {
-			logger.Error("failed to parse GCP metric", "error", err)
-			continue
+			logger.Error("failed to parse GCP total VCPUs", "error", err)
 		}
 
-		m.UnitAmount = f
 		m.Labels = v1.Labels{
 			"id":           instanceID,
 			"name":         instanceName,

@@ -246,18 +246,15 @@ func (c *Client) Refresh(ctx context.Context, project string) {
 				if err != nil {
 					logger.Error("failed to get instance type from url")
 				}
-				// TODO potentially we do not need a custom resource to cache, maybe
-				// just cache the instance (Kind fields are different in resource and
-				// instance) - will need to consolidate
-				c.cache.Set(util.CacheKey(zone, service, name), v1.Resource{
-					ID:          instanceID,
-					Name:        name,
-					Region:      zone, // TODO: Why is region set to zone
-					Service:     service,
-					Kind:        kind,
-					Lifecycle:   instance.GetScheduling().GetProvisioningModel(),
-					VCPUCount:   0,
-					LastUpdated: time.Now().UTC(),
+				c.cache.Set(util.CacheKey(zone, service, name), v1.Instance{
+					Name:    name,
+					Zone:    zone,
+					Service: service,
+					Kind:    kind,
+					Labels: v1.Labels{
+						"Lifecycle": instance.GetScheduling().GetProvisioningModel(),
+						"ID":        instanceID,
+					},
 				}, cache.DefaultExpiration)
 			}
 		}
