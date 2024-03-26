@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
-	"os"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -31,7 +30,7 @@ func NewEC2Client(cfg *aws.Config) *ec2Client {
 	// Make sure the initialisation was successful
 	if client == nil {
 		slog.Error("failed to create AWS EC2 client")
-		os.Exit(1)
+		return nil
 	}
 
 	// Return the ec2 service

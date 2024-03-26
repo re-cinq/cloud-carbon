@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
-	"os"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -31,7 +30,7 @@ func NewCloudWatchClient(ctx context.Context, cfg *aws.Config) *cloudWatchClient
 	// Make sure the initialisation was successful
 	if client == nil {
 		slog.Error("failed to create AWS CloudWatch client")
-		os.Exit(1)
+		return nil
 	}
 
 	// Return the cloudwatch service client
