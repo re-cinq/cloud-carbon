@@ -1,22 +1,19 @@
 package v1
 
-import "log/slog"
-
 // Represents the metrics for a specific service
 // The key is the unique name of the resource
 type Metrics map[string]Metric
 
 // Helper method for adding a specific metric
-func (m Metrics) Upsert(metric *Metric) {
-	// Make sure the map is initialized
-	if m == nil {
-		// TODO we should initilize this instead of showing an error
-		// we should also change this to use pointers
-		slog.Error("metrics map is nil")
+func (m *Metrics) Upsert(metric *Metric) {
+	if metric == nil {
+		return
 	}
 
-	// Assign the resource
-	if metric != nil {
-		m[metric.Name] = *metric
+	// if the map doesn't exist, initialize it
+	if *m == nil {
+		*m = make(Metrics)
 	}
+
+	(*m)[metric.Name] = *metric
 }

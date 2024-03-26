@@ -90,8 +90,7 @@ func (e *cloudWatchClient) GetEC2Metrics(ca *cache.Cache, region string, interva
 				Region:   region,
 			}
 		}
-
-		s.Labels["Name"] = meta.Name
+		s.Labels.Add("Name", meta.Name)
 		metric.UnitAmount = float64(meta.VCPUCount)
 		s.Metrics.Upsert(&metric)
 
