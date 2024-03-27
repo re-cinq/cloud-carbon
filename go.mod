@@ -5,12 +5,15 @@ go 1.22.0
 require (
 	cloud.google.com/go/compute v1.23.1
 	cloud.google.com/go/monitoring v1.16.3
+	github.com/allegro/bigcache/v3 v3.1.0
 	github.com/aws/aws-sdk-go-v2 v1.22.2
 	github.com/aws/aws-sdk-go-v2/config v1.24.0
 	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.30.1
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.133.0
 	github.com/awsdocs/aws-doc-sdk-examples/gov2/testtools v0.0.0-20240112231730-e6bb7238743b
 	github.com/cnkei/gospline v0.0.0-20191204052713-d67fac29a294
+	github.com/eko/gocache/lib/v4 v4.1.5
+	github.com/eko/gocache/store/bigcache/v4 v4.2.1
 	github.com/fsnotify/fsnotify v1.7.0
 	github.com/go-git/go-git/v5 v5.11.0
 	github.com/go-yaml/yaml v2.1.0+incompatible
@@ -57,6 +60,7 @@ require (
 	github.com/go-logr/logr v1.3.0 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
+	github.com/golang/mock v1.6.0 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/google/s2a-go v0.1.7 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.3.2 // indirect

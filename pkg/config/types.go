@@ -13,6 +13,7 @@ type ApplicationConfig struct {
 	ProvidersConfig `mapstructure:"providersConfig"`
 	Providers       map[v1.Provider]Provider `mapstructure:"providers"`
 	LogLevel        string                   `mapstructure:"logLevel"`
+	Cache           Cache                    `mapstructure:"cache"`
 }
 
 // Defines the configuration for the API
@@ -40,6 +41,16 @@ type Provider struct {
 
 	// The SDK Http Client transport configuration for the whole provider
 	Transport TransportConfig `mapstructure:"transport"`
+}
+
+// Cache configurations
+type Cache struct {
+	// The cache store built-into eko/gocache with
+	// the default being bigcache
+	Store string `mapstructure:"store"`
+
+	// Cache key expiration time
+	Expiry time.Duration `mapstructure:"expiry"`
 }
 
 type Account struct {

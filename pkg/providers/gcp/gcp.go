@@ -7,12 +7,12 @@ import (
 	"net/url"
 	"path"
 	"strconv"
-	"time"
 
 	compute "cloud.google.com/go/compute/apiv1"
 	"cloud.google.com/go/compute/apiv1/computepb"
 	monitoring "cloud.google.com/go/monitoring/apiv3/v2"
-	cache "github.com/patrickmn/go-cache"
+	eko "github.com/eko/gocache/lib/v4/cache"
+	"github.com/re-cinq/aether/pkg/cache"
 	"github.com/re-cinq/aether/pkg/config"
 	"github.com/re-cinq/aether/pkg/log"
 	"github.com/re-cinq/aether/pkg/providers/util"
@@ -28,7 +28,7 @@ type Client struct {
 	instances  *compute.InstancesClient
 
 	// Caching mechanism
-	cache *cache.Cache
+	cache *eko.Cache[string]
 }
 
 type options func(*Client)
@@ -40,10 +40,13 @@ func New(
 	account *config.Account,
 	opts ...options,
 ) (c *Client, teardown func(), err error) {
-	// set any defaults here
+
+	cache, err := cache.New(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
 	c = &Client{
-		// TODO do we want to expire cache?
-		cache: cache.New(3600*time.Minute, 3600*time.Minute),
+		cache: cache,
 	}
 
 	var clientOptions []option.ClientOption
@@ -129,13 +132,16 @@ func (c *Client) GetMetricsForInstances(
 			continue
 		}
 
+		// err := cacheManager.Set(ctx, "my-key", []byte("my-value"))
+		// value := cacheManager.Get(ctx, "my-key")
+
 		// Load the cache
 		// TODO make this more explicit, im not sure why this
 		// is needed as we dont use the cache anywhere
 		// I think this is removed, and is used when the metric data doesn't have
 		// the complete resource/instance information.
-		cachedInstance, ok := c.cache.Get(util.CacheKey(meta.zone, service, meta.name))
-		if cachedInstance == nil && !ok {
+		cachedInstance, err := c.cache.Get(ctx, util.CacheKey(meta.zone, service, meta.name))
+		if err != nil {
 			continue
 		}
 
@@ -237,7 +243,7 @@ func (c *Client) Refresh(ctx context.Context, project string) {
 
 			if instance.GetStatus() == "TERMINATED" {
 				// delete the entry from the cache
-				c.cache.Delete(util.CacheKey(zone, service, name))
+				c.cache.Delete(ctx, util.CacheKey(zone, service, name))
 				continue
 			}
 
@@ -246,7 +252,7 @@ func (c *Client) Refresh(ctx context.Context, project string) {
 				if err != nil {
 					logger.Error("failed to get instance type from url")
 				}
-				c.cache.Set(util.CacheKey(zone, service, name), v1.Instance{
+				c.cache.Set(ctx, util.CacheKey(zone, service, name), v1.Instance{
 					Name:    name,
 					Zone:    zone,
 					Service: service,
@@ -255,7 +261,7 @@ func (c *Client) Refresh(ctx context.Context, project string) {
 						"Lifecycle": instance.GetScheduling().GetProvisioningModel(),
 						"ID":        instanceID,
 					},
-				}, cache.DefaultExpiration)
+				})
 			}
 		}
 	}
