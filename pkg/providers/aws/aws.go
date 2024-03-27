@@ -7,16 +7,13 @@ import (
 	"net"
 	"net/http"
 	"net/url"
-	"os"
 	"time"
-
-	"github.com/patrickmn/go-cache"
-	"github.com/re-cinq/aether/pkg/config"
-	"github.com/re-cinq/aether/pkg/log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awshttp "github.com/aws/aws-sdk-go-v2/aws/transport/http"
 	awsConfig "github.com/aws/aws-sdk-go-v2/config"
+	"github.com/patrickmn/go-cache"
+	"github.com/re-cinq/aether/pkg/config"
 )
 
 var (
@@ -45,7 +42,6 @@ type Client struct {
 //
 // TODO: use options pattern
 func New(ctx context.Context, currentConfig *config.Account, customTransportConfig *config.TransportConfig) (*Client, error) {
-	logger := log.FromContext(ctx)
 
 	cfg, err := buildAWSConfig(ctx, currentConfig, customTransportConfig)
 	if err != nil {
@@ -53,21 +49,19 @@ func New(ctx context.Context, currentConfig *config.Account, customTransportConf
 	}
 
 	// Init the ec2 client
-	ec2Client := NewEC2Client(&cfg)
+	ec2Client := NewEC2Client(cfg)
 	if ec2Client == nil {
-		logger.Error("Could not initialize EC2 client")
-		os.Exit(1)
+		return nil, errors.New("Could not initialize EC2 client")
 	}
 
 	// Init the cloudwatch client
-	cloudWatchClient := NewCloudWatchClient(ctx, &cfg)
+	cloudWatchClient := NewCloudWatchClient(ctx, cfg)
 	if cloudWatchClient == nil {
-		logger.Error("Could not initialize CloudWatch client")
-		os.Exit(1)
+		return nil, errors.New("Could not initialize CloudWatch client")
 	}
 
 	return &Client{
-		cfg:              &cfg,
+		cfg:              cfg,
 		ec2Client:        ec2Client,
 		cloudWatchClient: cloudWatchClient,
 		// TODO: configure expiry and deletion
@@ -76,8 +70,7 @@ func New(ctx context.Context, currentConfig *config.Account, customTransportConf
 }
 
 // Helper function to builde the AWS config
-func buildAWSConfig(ctx context.Context, currentConfig *config.Account, customTransportConfig *config.TransportConfig) (aws.Config, error) {
-	logger := log.FromContext(ctx)
+func buildAWSConfig(ctx context.Context, currentConfig *config.Account, customTransportConfig *config.TransportConfig) (*aws.Config, error) {
 
 	// Error when loading the config file
 	var err error
@@ -125,16 +118,14 @@ func buildAWSConfig(ctx context.Context, currentConfig *config.Account, customTr
 		if customTransportConfig.Proxy.HTTPProxy != "" {
 			proxyURL, err = url.Parse(customTransportConfig.Proxy.HTTPProxy)
 			if err != nil {
-				logger.Error("failed to parse config 'HTTPProxy' url")
-				os.Exit(1)
+				return nil, err
 			}
 		}
 
 		if customTransportConfig.Proxy.HTTPSProxy != "" {
 			proxyURL, err = url.Parse(customTransportConfig.Proxy.HTTPSProxy)
 			if err != nil {
-				logger.Error("failed to parse config 'HTTPSProxy' url")
-				os.Exit(1)
+				return nil, err
 			}
 		}
 
@@ -157,5 +148,6 @@ func buildAWSConfig(ctx context.Context, currentConfig *config.Account, customTr
 
 	// -------------------------------------------------------------------
 	// Finally generate the config
-	return awsConfig.LoadDefaultConfig(ctx, loadExternalConfigs...)
+	c, err := awsConfig.LoadDefaultConfig(ctx, loadExternalConfigs...)
+	return &c, err
 }

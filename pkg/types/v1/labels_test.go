@@ -16,11 +16,8 @@ func TestLabelsOperations(t *testing.T) {
 	// Add a label
 	labels.Add(key, value)
 
-	// Make sure it exists
-	assert.True(t, labels.Exists(key))
-
-	// Get the value back
-	existingValue, exists := labels.Get(key)
+	// Check value exists
+	existingValue, exists := labels[key]
 	assert.True(t, exists)
 	assert.Equal(t, value, existingValue)
 
@@ -28,5 +25,36 @@ func TestLabelsOperations(t *testing.T) {
 	labels.Delete(key)
 
 	// Make sure the entry was deleted
-	assert.False(t, labels.Exists(key))
+	_, exists = labels[key]
+	assert.False(t, exists)
+}
+
+func TestAddLabelEmptyMap(t *testing.T) {
+	key := "foo"
+	value := "bar"
+
+	instance := Instance{
+		Name:     "test",
+		Provider: "test",
+	}
+
+	instance.Labels.Add(key, value)
+
+	expectedVal, exists := instance.Labels[key]
+	assert.True(t, exists)
+	assert.Equal(t, value, expectedVal)
+}
+
+func TestDeleteLabelEmptyMap(t *testing.T) {
+	key := "foo"
+
+	instance := Instance{
+		Name:     "test",
+		Provider: "test",
+	}
+
+	instance.Labels.Delete(key)
+
+	_, exists := instance.Labels[key]
+	assert.False(t, exists)
 }

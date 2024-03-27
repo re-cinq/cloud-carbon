@@ -27,3 +27,19 @@ func TestMetricsParser(t *testing.T) {
 	existing := metrics[cpuResource.Name]
 	assert.Equal(t, *cpuResource, existing)
 }
+
+func TestAddMetricEmptyMap(t *testing.T) {
+	name := Memory.String()
+	metric := NewMetric(name)
+
+	instance := Instance{
+		Name:     "test",
+		Provider: "test",
+	}
+
+	instance.Metrics.Upsert(metric)
+
+	expectedMetric, exists := instance.Metrics[metric.Name]
+	assert.True(t, exists)
+	assert.Equal(t, name, expectedMetric.Name)
+}

@@ -5,8 +5,6 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
-	"os"
-	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
@@ -31,7 +29,7 @@ func NewEC2Client(cfg *aws.Config) *ec2Client {
 	// Make sure the initialisation was successful
 	if client == nil {
 		slog.Error("failed to create AWS EC2 client")
-		os.Exit(1)
+		return nil
 	}
 
 	// Return the ec2 service
@@ -71,15 +69,17 @@ func (e *ec2Client) Refresh(ctx context.Context, ca *cache.Cache, region string)
 
 			id := aws.ToString(instance.InstanceId)
 			ca.Set(util.CacheKey(region, ec2Service, id),
-				&v1.Resource{
-					ID:          id,
-					Name:        getInstanceTag(instance.Tags, "Name"),
-					Service:     ec2Service,
-					Region:      region,
-					Kind:        string(instance.InstanceType),
-					Lifecycle:   string(instance.InstanceLifecycle),
-					VCPUCount:   int(aws.ToInt32(instance.CpuOptions.CoreCount) * aws.ToInt32(instance.CpuOptions.ThreadsPerCore)),
-					LastUpdated: time.Now().UTC(),
+				&v1.Instance{
+					Name:     id,
+					Provider: provider,
+					Service:  ec2Service,
+					Region:   region,
+					Kind:     string(instance.InstanceType),
+					Labels: v1.Labels{
+						"Name":      getInstanceTag(instance.Tags, "Name"),
+						"Lifecycle": string(instance.InstanceLifecycle),
+						"VCPUCount": string(aws.ToInt32(instance.CpuOptions.CoreCount) * aws.ToInt32(instance.CpuOptions.ThreadsPerCore)),
+					},
 				},
 				cache.DefaultExpiration,
 			)

@@ -69,16 +69,6 @@ func NewInstance(name string, provider Provider) *Instance {
 	}
 }
 
-// Upsert the metric for the resource
-func (i *Instance) UpsertMetric(resource *Metric) {
-	i.Metrics.Upsert(resource)
-}
-
-// Insert a label to the service
-func (i *Instance) AddLabel(key, value string) {
-	i.Labels.Add(key, value)
-}
-
 func (i *Instance) PrintPretty(ctx context.Context) {
 	logger := log.FromContext(ctx)
 

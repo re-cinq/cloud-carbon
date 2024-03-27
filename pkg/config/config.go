@@ -36,6 +36,8 @@ func InitConfig(ctx context.Context) {
 	// Set defaults
 	viper.SetDefault("api.metricsPath", "/metrics")
 	viper.SetDefault("logLevel", "info")
+	viper.SetDefault("cache.store", "bigcache")
+	viper.SetDefault("cache.expire", "3600m")
 
 	// Find and read the config file
 	err := viper.ReadInConfig()

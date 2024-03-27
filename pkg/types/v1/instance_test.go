@@ -36,13 +36,14 @@ func TestInstanceOperations(t *testing.T) {
 	assert.Equal(t, "n2-standard-8", instance.Kind)
 
 	// Add the metrics
-	instance.UpsertMetric(r)
+	instance.Metrics.Upsert(r)
 
 	// Add a label
-	instance.AddLabel("name", "test")
+	instance.Labels.Add("name", "test")
 
 	// Make sure the label exists
-	assert.True(t, instance.Labels.Exists("name"))
+	_, exists := instance.Labels["name"]
+	assert.True(t, exists)
 
 	// Check the resource was added
 	existingResource, exists := instance.Metrics[r.Name]
