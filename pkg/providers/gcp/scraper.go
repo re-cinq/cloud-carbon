@@ -111,6 +111,9 @@ func (s *Scraper) scrape(ctx context.Context) error {
 	s.Client.Refresh(ctx, *s.Project)
 
 	interval := config.AppConfig().Interval
+	if interval < 5*time.Minute {
+		return fmt.Errorf("error interval for GCP needs to be atleast 5m. It is: %+v", interval)
+	}
 
 	instances, err := s.Client.GetMetricsForInstances(ctx, *s.Project, interval.String())
 
